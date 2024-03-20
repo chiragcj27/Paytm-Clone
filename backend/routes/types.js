@@ -12,4 +12,10 @@ const signinSchema = z.object({
     password: z.string()
 })
 
-module.exports = {signupSchema, signinSchema};
+const updateBodySchema = z.object({
+    password: z.string().min(6),
+    firstname: z.string(),
+    lastname: z.string()
+})
+
+module.exports = {signupSchema, signinSchema, updateBodySchema};

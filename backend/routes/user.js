@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const {User} = require('../db');
-const {signupSchema, signinSchema} = require('./types');
+const {signupSchema, signinSchema, updateBodySchema} = require('./types');
 const jwt = require("jsonwebtoken");
 const {JWT_SECRET} = require("../config")
+const {authMiddleware} = require("../middleware");
 
-router.post("/signup", (req,res) => {
+router.post("/signup", async (req,res) => {
     const {success} = signupSchema.safeParse(req.body)
     if(!success) {
         return res.status(411).json({
@@ -41,7 +42,7 @@ router.post("/signup", (req,res) => {
     })
 })
 
-router.post("/signin", (req,res) => {
+router.post("/signin", async (req,res) => {
     const {success} = signinSchema.safeParse(req.body);
 
     if(!success) {
@@ -66,5 +67,49 @@ router.post("/signin", (req,res) => {
         return;
     }
 })
+
+router.post("/", authMiddleware, async (req,res) => {
+    const {success} = updateBodySchema.safeParse(req.body);
+
+    if(!success) {
+        return res.status(411).json({
+            msg: "Error while updating details."
+        })
+    }
+
+    await User.updateOne({ _id: req.userID }, req.body);
+
+    res.json({
+        message: "Updated Successfully" 
+    })
+
+})
+
+router.get("/bulk", async(req,res) => {
+
+    const filter = req.query.filter || '';
+    
+    const users = await User.find({
+        $or: [{
+            firstName: {
+                "$regex": filter
+            }
+        }, {
+            lastName: {
+                "$regex": filter
+            }
+        }]
+    })
+    
+    res.json({
+        user: users.map(user =>({
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            _id: user._id
+        }))
+    })
+})
+
 
 module.exports = router;
