@@ -1,13 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const {User} = require('../db');
+const {User, Account} = require('../db');
 const {signupSchema, signinSchema, updateBodySchema} = require('./types');
 const jwt = require("jsonwebtoken");
 const {JWT_SECRET} = require("../config")
 const {authMiddleware} = require("../middleware");
+const { getRandomNumber } = require('../compute.js');
+
+
 
 router.post("/signup", async (req,res) => {
-    const {success} = signupSchema.safeParse(req.body)
+    const {success} = signupSchema.safeParse(req.body);
     if(!success) {
         return res.status(411).json({
             msg: "Wrong Inputs"
@@ -31,6 +34,11 @@ router.post("/signup", async (req,res) => {
     })
 
     const userID = user._id;
+
+    await Account.create({
+        userID: userID,
+        balance: getRandomNumber()
+    })
 
     const token = jwt.sign({
         userID

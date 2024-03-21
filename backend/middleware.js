@@ -1,26 +1,23 @@
-const { jwt } = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 const {JWT_SECRET} = require("./config")
 
 
 function authMiddleware(req,res,next) {
     const authHeader = req.headers.authorization
-
     if(!authHeader) {
         return res.status(403).json({})
     }
 
-    const token = authHeader.split(' ')[1];
+    const token = authHeader;
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-
-        req.userID = decoded.userID;
-
+        req.userId = decoded.userId;
         next();
     } catch(err) {
-        return res.json(403).json({});
+        console.log(err);
+        return res.status(403).json({msg: "error"});
     }
-
 
 };
 
